@@ -221,4 +221,208 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		);		
 	});
 
+	it('/data/v1/objectschemas - can return the raw response from elasticsearch', function(done) {
+		var objectSchemas = [];
+		var i;
+		for(i=0;i<15;i++){
+			objectSchemas.push(new ObjectSchema({
+				namespace : 'ns://runrightfast.co/runrightfast-api-gateway',
+				version : '1.0.' + i,
+				description : 'runrightfast-api-gateway config'
+			}));
+		}
+
+		var promises = lodash.foldl(objectSchemas,function(promises,objectSchema){
+			idsToDelete.push(objectSchema.id);
+			promises.push(database.createObjectSchema(objectSchema));
+			return promises;
+		},[]);
+
+		when(when.all(promises),
+			function(){
+				when(database.database.refreshIndex(),
+					function(){
+						var options = {
+							logLevel : 'DEBUG',
+							elasticSearch: {
+								host: 'localhost'
+							}
+						};
+
+						var server = new Hapi.Server();
+						server.pack.require('../', options, function(err) {
+							console.log('err: ' + err);
+							try{
+								expect(!!err).to.equal(false);
+
+								var injectOptions = {
+									method: 'GET',
+									url: '/data/v1/objectschemas?dataFields=id,namespace,version&raw=true'
+								};
+
+								server.inject(injectOptions,function(response){
+									var responseObject = JSON.parse(response.payload);
+									console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+									expect(response.statusCode).to.equal(200);
+									expect(responseObject.data.hits.hits.length).to.equal(10);
+
+									lodash.forEach(responseObject.data.hits.hits,function(hit){
+										joi.validate(hit.fields,{
+											id : types.String().required(),
+											namespace : types.String().required(),
+											version : types.String().required(),
+										});
+									});
+									done();
+								});
+							}catch(err2){
+								done(err2);
+							}
+
+						});
+					},
+					done
+				);
+			},
+			done
+		);		
+	});
+
+	it('/data/v1/objectschemas - can apply sorting against a single field', function(done) {
+		var objectSchemas = [];
+		var i;
+		for(i=0;i<15;i++){
+			objectSchemas.push(new ObjectSchema({
+				namespace : 'ns://runrightfast.co/runrightfast-api-gateway',
+				version : '1.0.' + i,
+				description : 'runrightfast-api-gateway config'
+			}));
+		}
+
+		var promises = lodash.foldl(objectSchemas,function(promises,objectSchema){
+			idsToDelete.push(objectSchema.id);
+			promises.push(database.createObjectSchema(objectSchema));
+			return promises;
+		},[]);
+
+		when(when.all(promises),
+			function(){
+				when(database.database.refreshIndex(),
+					function(){
+						var options = {
+							logLevel : 'DEBUG',
+							elasticSearch: {
+								host: 'localhost'
+							}
+						};
+
+						var server = new Hapi.Server();
+						server.pack.require('../', options, function(err) {
+							console.log('err: ' + err);
+							try{
+								expect(!!err).to.equal(false);
+
+								var injectOptions = {
+									method: 'GET',
+									url: '/data/v1/objectschemas?sort=version|desc'
+								};
+
+								server.inject(injectOptions,function(response){
+									var responseObject = JSON.parse(response.payload);
+									console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+									expect(response.statusCode).to.equal(200);
+									expect(responseObject.data.hits.length).to.equal(10);
+
+									lodash.forEach(responseObject.data.hits,function(hit){
+										// verifies that returned objects are valid ObjectSchemas
+										console.log(JSON.stringify(new ObjectSchema(hit),undefined,2));
+									});
+									done();
+								});
+							}catch(err2){
+								done(err2);
+							}
+
+						});
+					},
+					done
+				);
+			},
+			done
+		);		
+	});
+
+	it.only('/data/v1/objectschemas - can apply sorting against a mulitple fields', function(done) {
+		var objectSchemas = [];
+		var i;
+		for(i=0;i<15;i++){
+			objectSchemas.push(new ObjectSchema({
+				namespace : 'ns://runrightfast.co/runrightfast-api-gateway',
+				version : '1.0.' + i,
+				description : 'runrightfast-api-gateway config - ' + (i % 2)
+			}));
+		}
+
+		var promises = lodash.foldl(objectSchemas,function(promises,objectSchema){
+			idsToDelete.push(objectSchema.id);
+			promises.push(database.createObjectSchema(objectSchema));
+			return promises;
+		},[]);
+
+		when(when.all(promises),
+			function(){
+				when(database.database.refreshIndex(),
+					function(){
+						var options = {
+							logLevel : 'DEBUG',
+							elasticSearch: {
+								host: 'localhost'
+							}
+						};
+
+						var server = new Hapi.Server();
+						server.pack.require('../', options, function(err) {
+							console.log('err: ' + err);
+							try{
+								expect(!!err).to.equal(false);
+
+								var injectOptions = {
+									method: 'GET',
+									url: '/data/v1/objectschemas?sort=namespace|desc,version|desc&version=true'
+								};
+
+								server.inject(injectOptions,function(response){
+									var responseObject = JSON.parse(response.payload);
+									console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+									try{
+										expect(response.statusCode).to.equal(200);
+										expect(responseObject.data.hits.length).to.equal(10);
+
+										var objectSchema1,objectSchema2;
+										lodash.forEach(responseObject.data.hits,function(hit){
+											// verifies that returned objects are valid ObjectSchemas
+											objectSchema1 = new ObjectSchema(hit.data);
+											if(objectSchema2){
+												expect(objectSchema1.version).to.be.lte(objectSchema2.version);
+											}
+											objectSchema2 = objectSchema1;
+										});
+										done();
+									}catch(err3){
+										done(err3);
+									}
+								});
+							}catch(err2){
+								done(err2);
+							}
+
+						});
+					},
+					done
+				);
+			},
+			done
+		);		
+	});
+
 });
