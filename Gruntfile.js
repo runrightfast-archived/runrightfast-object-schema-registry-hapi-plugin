@@ -29,7 +29,7 @@ module.exports = function(grunt) {
 					todo : true,
 					vars : true,
 					white : true,
-					predef : [ 'describe', 'it' ]
+					predef : [ 'describe', 'it','before', 'after', 'beforeEach', 'afterEach' ]
 				},
 				options : {
 					log : 'out/lint.log',
