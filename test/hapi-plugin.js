@@ -17,18 +17,23 @@
 
 var expect = require('chai').expect;
 var Hapi = require('hapi');
+var lodash = require('lodash');
 
 describe('LoggingService Proxy Hapi Plugin', function() {
 
 	it('can be added as a plugin to hapi', function(done) {
 
 		var options = {
-		/* TODO: add plugin options here */
+			logLevel : 'DEBUG',
+			elasticSearch: {
+				host: 'localhost'
+			}
 		};
 
 		var server = new Hapi.Server();
 		server.pack.require('../', options, function(err) {
-			expect(err).to.not.exist;
+			console.log('err: ' + err);
+			expect(!!err).to.equal(false);
 			done();
 		});
 	});
