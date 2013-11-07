@@ -90,7 +90,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		});
 	});
 
-	it('/data/v1/objectschemas - returns the first 10 ObjectSchemas sorted by namespace and version', function(done) {
+	it('/v1/resources/objectschemas - returns the first 10 ObjectSchemas sorted by namespace and version', function(done) {
 		var objectSchemas = [];
 		var i;
 		for(i=0;i<15;i++){
@@ -126,7 +126,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 
 								var injectOptions = {
 									method: 'GET',
-									url: '/data/v1/objectschemas'
+									url: '/v1/resources/objectschemas'
 								};
 
 								server.inject(injectOptions,function(response){
@@ -154,7 +154,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		);		
 	});
 
-	it('/data/v1/objectschemas - returns specified fields for the first 10 ObjectSchemas sorted by namespace and version', function(done) {
+	it('/v1/resources/objectschemas - returns specified fields for the first 10 ObjectSchemas sorted by namespace and version', function(done) {
 		var objectSchemas = [];
 		var i;
 		for(i=0;i<15;i++){
@@ -190,7 +190,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 
 								var injectOptions = {
 									method: 'GET',
-									url: '/data/v1/objectschemas?dataFields=id,namespace,version'
+									url: '/v1/resources/objectschemas?dataFields=id,namespace,version'
 								};
 
 								server.inject(injectOptions,function(response){
@@ -221,7 +221,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		);		
 	});
 
-	it('/data/v1/objectschemas - can return the raw response from elasticsearch', function(done) {
+	it('/v1/resources/objectschemas - can return the raw response from elasticsearch', function(done) {
 		var objectSchemas = [];
 		var i;
 		for(i=0;i<15;i++){
@@ -257,7 +257,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 
 								var injectOptions = {
 									method: 'GET',
-									url: '/data/v1/objectschemas?dataFields=id,namespace,version&raw=true'
+									url: '/v1/resources/objectschemas?dataFields=id,namespace,version&raw=true'
 								};
 
 								server.inject(injectOptions,function(response){
@@ -288,7 +288,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		);		
 	});
 
-	it('/data/v1/objectschemas - can apply sorting against a single field', function(done) {
+	it('/v1/resources/objectschemas - can apply sorting against a single field', function(done) {
 		var objectSchemas = [];
 		var i;
 		for(i=0;i<15;i++){
@@ -324,7 +324,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 
 								var injectOptions = {
 									method: 'GET',
-									url: '/data/v1/objectschemas?sort=version|desc'
+									url: '/v1/resources/objectschemas?sort=version|desc'
 								};
 
 								server.inject(injectOptions,function(response){
@@ -352,7 +352,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		);		
 	});
 
-	it.only('/data/v1/objectschemas - can apply sorting against a mulitple fields', function(done) {
+	it('/v1/resources/objectschemas - can apply sorting against a mulitple fields', function(done) {
 		var objectSchemas = [];
 		var i;
 		for(i=0;i<15;i++){
@@ -388,7 +388,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 
 								var injectOptions = {
 									method: 'GET',
-									url: '/data/v1/objectschemas?sort=namespace|desc,version|desc&version=true'
+									url: '/v1/resources/objectschemas?sort=namespace|desc,version|desc&version=true'
 								};
 
 								server.inject(injectOptions,function(response){
