@@ -33,7 +33,7 @@ var ejs = new ElasticSearchClient({
 var joi = require('joi');
 var types = joi.types;
 
-describe('LoggingService Proxy Hapi Plugin', function() {
+describe('ObjectSchema Registry Proxy Hapi Plugin', function() {
 
 	var database = new ObjectSchemaRegistryDatabase({
 		ejs : ejs,
@@ -90,7 +90,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		});
 	});
 
-	it('/v1/resources/objectschemas - returns the first 10 ObjectSchemas sorted by namespace and version', function(done) {
+	it('GET /v1/resources/objectschemas - returns the first 10 ObjectSchemas sorted by namespace and version', function(done) {
 		var objectSchemas = [];
 		var i;
 		for(i=0;i<15;i++){
@@ -154,7 +154,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		);		
 	});
 
-	it('/v1/resources/objectschemas - returns specified fields for the first 10 ObjectSchemas sorted by namespace and version', function(done) {
+	it('GET /v1/resources/objectschemas - returns specified fields for the first 10 ObjectSchemas sorted by namespace and version', function(done) {
 		var objectSchemas = [];
 		var i;
 		for(i=0;i<15;i++){
@@ -221,7 +221,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		);		
 	});
 
-	it('/v1/resources/objectschemas - can return the raw response from elasticsearch', function(done) {
+	it('GET /v1/resources/objectschemas - can return the raw response from elasticsearch', function(done) {
 		var objectSchemas = [];
 		var i;
 		for(i=0;i<15;i++){
@@ -288,7 +288,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		);		
 	});
 
-	it('/v1/resources/objectschemas - can apply sorting against a single field', function(done) {
+	it('GET /v1/resources/objectschemas - can apply sorting against a single field', function(done) {
 		var objectSchemas = [];
 		var i;
 		for(i=0;i<15;i++){
@@ -352,7 +352,7 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 		);		
 	});
 
-	it('/v1/resources/objectschemas - can apply sorting against a mulitple fields', function(done) {
+	it('GET /v1/resources/objectschemas - can apply sorting against a mulitple fields', function(done) {
 		var objectSchemas = [];
 		var i;
 		for(i=0;i<15;i++){
@@ -423,6 +423,152 @@ describe('LoggingService Proxy Hapi Plugin', function() {
 			},
 			done
 		);		
+	});
+
+	it('POST /v1/resources/objectschemas - creates a new ObjectSchema',function(done){
+		var schema = new ObjectSchema({
+			namespace : 'ns://runrightfast.co/couchbase',
+			version : '1.0.0',
+			description : 'Couchbase config schema'
+		});
+
+		var serverOptions = {
+			logLevel : 'DEBUG',
+			elasticSearch: {
+				host: 'localhost'
+			}
+		};
+
+		var server = new Hapi.Server();
+		server.pack.require('../', serverOptions, function(err) {
+			console.log('err: ' + err);
+			try{
+				expect(!!err).to.equal(false);
+
+				var createOptions = {
+					method: 'POST',
+					url: '/v1/resources/objectschemas',
+					payload: schema
+				};
+
+				server.inject(createOptions,function(response){
+					var responseObject = JSON.parse(response.payload);
+					console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+					try{
+						expect(response.statusCode).to.equal(201);
+						idsToDelete.push(responseObject.data.id);
+						done();
+					}catch(err){
+						done(err);
+					}
+				});
+			}catch(serverErr){
+				done(serverErr);
+			}
+		});
+
+	});
+
+	it('POST /v1/resources/objectschemas - will fail if the ObjectSchema is invalid',function(done){
+		var schema = {
+			namespace : 'INVALID NAMSPACE',
+			version : '1.0.0',
+			description : 'Couchbase config schema'
+		};
+
+		var serverOptions = {
+			logLevel : 'DEBUG',
+			elasticSearch: {
+				host: 'localhost'
+			}
+		};
+
+		var server = new Hapi.Server();
+		server.pack.require('../', serverOptions, function(err) {
+			console.log('err: ' + err);
+			try{
+				expect(!!err).to.equal(false);
+
+				var createOptions = {
+					method: 'POST',
+					url: '/v1/resources/objectschemas',
+					payload: schema
+				};
+
+				server.inject(createOptions,function(response){
+					var responseObject = JSON.parse(response.payload);
+					console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+					try{
+						expect(response.statusCode).to.equal(400);
+						done();
+					}catch(err){
+						done(err);
+					}
+				});
+			}catch(serverErr){
+				done(serverErr);
+			}
+		});
+
+	});
+
+	it('POST /v1/resources/objectschemas - creating a new ObjectSchema with an existing namespace and version will fail',function(done){
+		var schema = new ObjectSchema({
+			namespace : 'ns://runrightfast.co/couchbase',
+			version : '1.0.0',
+			description : 'Couchbase config schema'
+		});
+
+		var serverOptions = {
+			logLevel : 'DEBUG',
+			elasticSearch: {
+				host: 'localhost'
+			}
+		};
+
+		var server = new Hapi.Server();
+		server.pack.require('../', serverOptions, function(err) {
+			console.log('err: ' + err);
+			try{
+				expect(!!err).to.equal(false);
+
+				var createOptions = {
+					method: 'POST',
+					url: '/v1/resources/objectschemas',
+					payload: schema
+				};
+
+				server.inject(createOptions,function(response){
+					var responseObject = JSON.parse(response.payload);
+					console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+					try{
+						expect(response.statusCode).to.equal(201);
+						idsToDelete.push(responseObject.data.id);
+
+							server.inject(createOptions,function(response){
+								var responseObject = JSON.parse(response.payload);
+								console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+								try{
+									expect(response.statusCode).to.equal(409);
+									done();
+								}catch(err){
+									done(err);
+								}
+							});
+						
+					}catch(err){
+						done(err);
+					}
+				});
+			}catch(serverErr){
+				done(serverErr);
+			}
+		});
+
 	});
 
 });
