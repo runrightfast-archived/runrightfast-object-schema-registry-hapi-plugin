@@ -10,7 +10,7 @@
 	"scripts":{
 		"blanket":{
 			"pattern":[
-				"lib/hapi-plugin.jsXXX",
+				"lib/hapi-plugin.js",
 				"lib/pkgInfo.js"
 			]	
 		}

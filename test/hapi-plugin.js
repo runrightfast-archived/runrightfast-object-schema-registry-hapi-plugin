@@ -619,7 +619,7 @@ describe('ObjectSchema Registry Proxy Hapi Plugin', function() {
 
 	});
 
-	it('PUT /v1/resources/objectschema - replaces an ObjectSchema',function(done){
+	it('PUT /v1/resources/objectschemas/{id}/{version} - replaces an ObjectSchema',function(done){
 		var schema = new ObjectSchema({
 			namespace : 'ns://runrightfast.co/couchbase',
 			version : '1.0.0',
@@ -669,6 +669,155 @@ describe('ObjectSchema Registry Proxy Hapi Plugin', function() {
 								expect(lodash.isString(responseObject.data.id)).to.equal(true);
 								expect(responseObject.data.version).to.equal(2);
 								done();
+							}catch(err){
+								done(err);
+							}
+						});
+						
+					}catch(err){
+						done(err);
+					}
+				});
+			}catch(serverErr){
+				done(serverErr);
+			}
+		});
+
+	});
+
+	it('GET /v1/resources/objectschemas/{id}',function(done){
+		var schema = new ObjectSchema({
+			namespace : 'ns://runrightfast.co/couchbase',
+			version : '1.0.0',
+			description : 'Couchbase config schema'
+		});
+
+		var serverOptions = {
+			logLevel : 'DEBUG',
+			elasticSearch: {
+				host: 'localhost'
+			}
+		};
+
+		var server = new Hapi.Server();
+		server.pack.require('../', serverOptions, function(err) {
+			console.log('err: ' + err);
+			try{
+				expect(!!err).to.equal(false);
+
+				var createOptions = {
+					method: 'POST',
+					url: '/v1/resources/objectschemas',
+					payload: schema
+				};
+
+				server.inject(createOptions,function(response){
+					var responseObject = JSON.parse(response.payload);
+					console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+					try{
+						expect(response.statusCode).to.equal(201);
+						idsToDelete.push(responseObject.data.id);
+						expect(lodash.isString(responseObject.data.id)).to.equal(true);
+						schema.id = responseObject.data.id;
+
+						var getOptions = {
+							method: 'GET',
+							url: '/v1/resources/objectschemas/' + responseObject.data.id
+						};
+						server.inject(getOptions,function(response){
+							var responseObject = JSON.parse(response.payload);
+							console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+							try{
+								expect(response.statusCode).to.equal(200);
+								var retrievedObjectSchema = new ObjectSchema(responseObject.data);
+								expect(retrievedObjectSchema.id).to.equal(responseObject.data.id);
+								done();
+							}catch(err){
+								done(err);
+							}
+						});
+						
+					}catch(err){
+						done(err);
+					}
+				});
+			}catch(serverErr){
+				done(serverErr);
+			}
+		});
+
+	});
+
+	it('DELETE /v1/resources/objectschemas/{id}',function(done){
+		var schema = new ObjectSchema({
+			namespace : 'ns://runrightfast.co/couchbase',
+			version : '1.0.0',
+			description : 'Couchbase config schema'
+		});
+
+		var serverOptions = {
+			logLevel : 'DEBUG',
+			elasticSearch: {
+				host: 'localhost'
+			}
+		};
+
+		var server = new Hapi.Server();
+		server.pack.require('../', serverOptions, function(err) {
+			console.log('err: ' + err);
+			try{
+				expect(!!err).to.equal(false);
+
+				var createOptions = {
+					method: 'POST',
+					url: '/v1/resources/objectschemas',
+					payload: schema
+				};
+
+				server.inject(createOptions,function(response){
+					var responseObject = JSON.parse(response.payload);
+					console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+					try{
+						expect(response.statusCode).to.equal(201);
+						idsToDelete.push(responseObject.data.id);
+						expect(lodash.isString(responseObject.data.id)).to.equal(true);
+						schema.id = responseObject.data.id;
+
+						var getOptions = {
+							method: 'GET',
+							url: '/v1/resources/objectschemas/' + responseObject.data.id
+						};
+						server.inject(getOptions,function(response){
+							var responseObject = JSON.parse(response.payload);
+							console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+							try{
+								expect(response.statusCode).to.equal(200);
+								var retrievedObjectSchema = new ObjectSchema(responseObject.data);
+								expect(retrievedObjectSchema.id).to.equal(responseObject.data.id);
+								
+								var deleteOptions = {
+									method: 'DELETE',
+									url: '/v1/resources/objectschemas/' + responseObject.data.id
+								};
+								server.inject(deleteOptions,function(response){
+								var responseObject = JSON.parse(response.payload);
+								console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+								try{
+									expect(response.statusCode).to.equal(200);
+									expect(responseObject.data.found).to.equal(true);
+									expect(retrievedObjectSchema.id).to.equal(responseObject.data.id);
+									expect(responseObject.data.version).to.equal(2);
+									done();
+								}catch(err){
+									done(err);
+								}
+							});
+
 							}catch(err){
 								done(err);
 							}
