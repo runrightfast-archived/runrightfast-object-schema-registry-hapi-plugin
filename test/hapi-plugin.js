@@ -458,6 +458,54 @@ describe('ObjectSchema Registry Proxy Hapi Plugin', function() {
 					try{
 						expect(response.statusCode).to.equal(201);
 						idsToDelete.push(responseObject.data.id);
+						expect(lodash.isString(responseObject.data.id)).to.equal(true);
+						done();
+					}catch(err){
+						done(err);
+					}
+				});
+			}catch(serverErr){
+				done(serverErr);
+			}
+		});
+
+	});
+
+	it('POST /v1/resources/objectschemas - can return the raw elasticsearch response',function(done){
+		var schema = new ObjectSchema({
+			namespace : 'ns://runrightfast.co/couchbase',
+			version : '1.0.0',
+			description : 'Couchbase config schema'
+		});
+
+		var serverOptions = {
+			logLevel : 'DEBUG',
+			elasticSearch: {
+				host: 'localhost'
+			}
+		};
+
+		var server = new Hapi.Server();
+		server.pack.require('../', serverOptions, function(err) {
+			console.log('err: ' + err);
+			try{
+				expect(!!err).to.equal(false);
+
+				var createOptions = {
+					method: 'POST',
+					url: '/v1/resources/objectschemas?raw=true',
+					payload: schema
+				};
+
+				server.inject(createOptions,function(response){
+					var responseObject = JSON.parse(response.payload);
+					console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+					try{
+						expect(response.statusCode).to.equal(201);
+						idsToDelete.push(responseObject.data._id);
+						expect(lodash.isString(responseObject.data._id)).to.equal(true);
+						expect(responseObject.data._version).to.equal(1);						
 						done();
 					}catch(err){
 						done(err);
@@ -559,6 +607,72 @@ describe('ObjectSchema Registry Proxy Hapi Plugin', function() {
 									done(err);
 								}
 							});
+						
+					}catch(err){
+						done(err);
+					}
+				});
+			}catch(serverErr){
+				done(serverErr);
+			}
+		});
+
+	});
+
+	it('PUT /v1/resources/objectschema - replaces an ObjectSchema',function(done){
+		var schema = new ObjectSchema({
+			namespace : 'ns://runrightfast.co/couchbase',
+			version : '1.0.0',
+			description : 'Couchbase config schema'
+		});
+
+		var serverOptions = {
+			logLevel : 'DEBUG',
+			elasticSearch: {
+				host: 'localhost'
+			}
+		};
+
+		var server = new Hapi.Server();
+		server.pack.require('../', serverOptions, function(err) {
+			console.log('err: ' + err);
+			try{
+				expect(!!err).to.equal(false);
+
+				var createOptions = {
+					method: 'POST',
+					url: '/v1/resources/objectschemas',
+					payload: schema
+				};
+
+				server.inject(createOptions,function(response){
+					var responseObject = JSON.parse(response.payload);
+					console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+					try{
+						expect(response.statusCode).to.equal(201);
+						idsToDelete.push(responseObject.data.id);
+						expect(lodash.isString(responseObject.data.id)).to.equal(true);
+						schema.id = responseObject.data.id;
+
+						var replaceOptions = {
+							method: 'PUT',
+							url: '/v1/resources/objectschemas/' + responseObject.data.id + '/1',
+							payload: schema
+						};
+						server.inject(replaceOptions,function(response){
+							var responseObject = JSON.parse(response.payload);
+							console.log('response: ' + JSON.stringify(responseObject,undefined,2));
+
+							try{
+								expect(response.statusCode).to.equal(200);
+								expect(lodash.isString(responseObject.data.id)).to.equal(true);
+								expect(responseObject.data.version).to.equal(2);
+								done();
+							}catch(err){
+								done(err);
+							}
+						});
 						
 					}catch(err){
 						done(err);
